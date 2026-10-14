@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="fa" dir="rtl" data-theme="midnight">
+<head>
+  <meta charset="utf-8">
+  <title>لایب‌مموری (LibMemory) | مدیریت هوشمند حافظه</title>
+  <link rel="stylesheet" href="manager.css">
+</head>
+<body>
+<header>
+  <h1 id="appTitle">🧠 لایب‌مموری | LibMemory</h1>
+  <span id="stats"></span>
+  <span id="aiBadge" title="وضعیت هوشواره"></span>
+  <div class="sp"></div>
+  <button id="varsBtn" class="sec">🧩 متغیرها</button>
+  <button id="aiReviewBtn" class="ai">🔄 به‌روزرسانی</button>
+  <button id="tutBtn">📖 راهنمای جامع</button>
+  <button id="settingsBtn">⚙️ تنظیمات</button>
+</header>
+<main>
+  <!-- ستون دسته‌ها -->
+  <aside id="catsCol">
+    <div class="colTitle" id="catsColTitle">📁 دسته‌ها</div>
+    <div class="row">
+      <input id="catQ" placeholder="جستجوی دسته...">
+      <button id="newCatBtn" title="دسته جدید">+</button>
+    </div>
+    <ul id="catList"></ul>
+    <div class="catTools">
+      <button id="aiCatBtn" class="ai" title="یک درخواست برای تمام حافظه‌های بدون دسته">🤖 دسته‌بندی با هوشواره</button>
+      <button id="localCatBtn" title="بدون مصرف API با موتور هوشمند روش دستی">⚡ دسته‌بندی با روش دستی</button>
+    </div>
+  </aside>
+
+  <!-- ستون حافظه‌ها -->
+  <aside id="memsCol">
+    <div class="row">
+      <input id="q" placeholder="🔍 جستجو و رتبه‌بندی هوشمند (روش دستی)...">
+    </div>
+    <div class="row">
+      <select id="sort">
+        <option value="relevance" id="optSortRel">مرتبط‌ترین (روش دستی)</option>
+        <option value="updated" id="optSortUpd" selected>آخرین ویرایش</option>
+        <option value="created" id="optSortCre">تاریخ ایجاد</option>
+        <option value="title" id="optSortTit">عنوان (الفبایی)</option>
+      </select>
+      <button id="newBtn" class="primary">+ دستی</button>
+      <button id="aiNewBtn" class="ai">🤖 با هوشواره</button>
+    </div>
+
+    <!-- نوار عملیات گروهی و پین/حذف سریع -->
+    <div id="batchBar" class="batch-bar">
+      <label class="row" style="margin:0;gap:4px">
+        <input type="checkbox" id="selectAllBatch" style="width:auto">
+        <span id="batchCount">انتخاب: ۰</span>
+      </label>
+      <div class="sp"></div>
+      <button id="batchPinBtn" class="sm-btn" title="پین / لغو پین موارد انتخاب‌شده">📌 پین</button>
+      <button id="batchDelBtn" class="sm-btn danger" title="حذف موارد انتخاب‌شده بدون نیاز به باز کردن">🗑 حذف</button>
+    </div>
+
+    <ul id="list"></ul>
+  </aside>
+
+  <!-- بخش ویرایشگر -->
+  <section id="editor">
+    <div id="empty">یک حافظه را برای مشاهده و ویرایش انتخاب کن، یا از «+ دستی» برای ایجاد استفاده کن.</div>
+    <form id="form" hidden>
+      <div class="row">
+        <input id="title" placeholder="عنوان حافظه..." maxlength="200" style="flex:1">
+        <button type="button" id="pinToggleBtn" class="sec" title="پین کردن به بالای لیست">📌 سنجاق</button>
+      </div>
+      <div class="row">
+        <label class="lbl" id="catSelLbl">دسته:</label>
+        <select id="catSel"></select>
+      </div>
+      <div class="var-quick-bar" id="varQuickBar">
+        <span class="hint" id="insertVarHint">درج متغیر:</span>
+        <button type="button" class="tag-btn" data-var="{تاریخ}">{تاریخ}</button>
+        <button type="button" class="tag-btn" data-var="{امروز}">{امروز}</button>
+        <button type="button" class="tag-btn" data-var="{ساعت}">{ساعت}</button>
+        <button type="button" class="tag-btn" data-var="{date}">{date}</button>
+        <span id="customVarChips"></span>
+      </div>
+      <textarea id="content" placeholder="متن پاراگراف... می‌توانی از {متغیر} استفاده کنی"></textarea>
+      <div class="meta" id="meta"></div>
+      <div class="row">
+        <button type="submit" id="saveFormBtn" class="primary">💾 ذخیره (Ctrl+S)</button>
+        <button type="button" id="cancelBtn">انصراف</button>
+        <button type="button" id="sumBtn" class="ai">🤖 خلاصه‌سازی هوشواره</button>
+        <div class="sp"></div>
+        <button type="button" id="deleteBtn" class="danger">🗑 حذف این حافظه</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<!-- دیالوگ مدیریت متغیرهای پویا -->
+<dialog id="varsDlg" class="wide">
+  <h3 id="varsDlgTitle">🧩 مدیریت متغیرهای پویا</h3>
+  <p class="hint" id="varsDlgHint">
+    متغیرها را تعریف کن و به شکل <code>{نام_متغیر}</code> درون عنوان یا متن حافظه‌ها قرار بده.
+    هر زمان مقدار متغیری را در اینجا تغییر دهی، در تمام حافظه‌ها و هنگام ارسال به هوش مصنوعی به‌طور خودکار جایگزین می‌شود.
+  </p>
+  <div class="row">
+    <input id="newVarName" placeholder="نام متغیر (مثلاً: پروژه_فعلی، نام، شرکت)">
+    <input id="newVarVal" placeholder="مقدار متغیر (می‌توانی از {تاریخ} هم در آن استفاده کنی)">
+    <button id="addVarBtn" class="primary">+ افزودن متغیر</button>
+  </div>
+  <table id="varsTbl">
+    <thead>
+      <tr>
+        <th id="thVarName">نام متغیر</th>
+        <th id="thVarVal">مقدار</th>
+        <th id="thVarPreview">پیش‌نمایش زنده</th>
+        <th id="thVarAct">عملیات</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div class="hint" id="sysVarsHint" style="margin-top:10px">
+    <b>متغیرهای سیستمی خودکار:</b> <code>{تاریخ}</code> (شمسی)، <code>{امروز}</code>، <code>{ساعت}</code>، <code>{تاریخ_میلادی}</code>، <code>{date}</code>، <code>{time}</code>
+  </div>
+  <div class="row" style="margin-top:14px">
+    <div class="sp"></div>
+    <button id="varsClose" class="primary">بستن</button>
+  </div>
+</dialog>
+
+<!-- دیالوگ به‌روزرسانی حافظه‌ها (هر دو حالت دستی و هوشواره با قابلیت ویرایش پیش‌نمایش) -->
+<dialog id="reviewDlg" class="wide">
+  <h3 id="reviewDlgTitle">🔄 به‌روزرسانی حافظه‌ها (روش دستی و هوشواره)</h3>
+  <p class="hint" id="reviewDlgHint">
+    می‌توانی حافظه‌هایت را به دو روش <b>دستی (بدون هوشواره)</b> یا <b>با هوشواره</b> به‌روزرسانی کنی. در هر دو حالت، قبل از ذخیره نهایی می‌توانی عنوان و متن پیشنهادی را در پیش‌نمایش مستقیماً ویرایش کنی یا همان‌طور که هست تأیید بزنی.
+  </p>
+
+  <div class="mode-tabs">
+    <button type="button" id="tabReviewManual" class="tab-btn active">⚡ به‌روزرسانی دستی (بدون هوشواره)</button>
+    <button type="button" id="tabReviewAi" class="tab-btn">🤖 به‌روزرسانی با هوشواره</button>
+  </div>
+
+  <div id="reviewManualPane" class="review-pane">
+    <div class="row">
+      <input id="reviewOldTerm" placeholder="عبارت قدیمی برای جایگزینی (اختیاری - مثلاً: پایتون ۳.۱۰)">
+      <input id="reviewNewTerm" placeholder="عبارت یا نکته جدید (مثلاً: پایتون ۳.۱۲)">
+    </div>
+    <textarea id="reviewManualNote" rows="2" placeholder="یا کلمات کلیدی / توضیحات تغییر را بنویس تا مرتبط‌ترین حافظه‌ها با روش دستی پیدا شوند (مثلاً: پایتون ۳.۱۰ -> پایتون ۳.۱۲)..." style="margin-top:6px"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button type="button" id="reviewManualFindBtn" class="sec">🔍 یافتن حافظه‌های مرتبط و ساخت پیش‌نمایش (روش دستی)</button>
+    </div>
+  </div>
+
+  <div id="reviewAiPane" class="review-pane" hidden>
+    <textarea id="reviewInstruction" rows="3" placeholder="تغییرات جدید زندگی، ابزارها، پروژه یا ترجیحاتت را به زبان ساده بنویس..."></textarea>
+    <div class="row" style="margin-top:8px">
+      <button type="button" id="reviewGoBtn" class="ai">🤖 بررسی و پیشنهاد تغییرات با هوشواره</button>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:6px">
+    <span id="reviewStatus" class="hint"></span>
+  </div>
+
+  <div id="reviewDiffList"></div>
+
+  <div class="row" style="margin-top:14px">
+    <button id="reviewApplyBtn" class="primary" hidden>✅ تأیید و اعمال تغییرات انتخاب‌شده</button>
+    <div class="sp"></div>
+    <button id="reviewCloseBtn">انصراف و بستن</button>
+  </div>
+</dialog>
+
+<!-- دیالوگ ساخت با هوشواره / روش دستی -->
+<dialog id="aiDlg" class="wide">
+  <h3 id="aiDlgTitle">🤖 استخراج و ساخت حافظه</h3>
+  <p class="hint" id="aiDlgHint">متن را اینجا بچسبان. می‌توانی با هوشواره نکات کلیدی را استخراج کنی یا با روش دستی پیش‌نویس بسازی.</p>
+  <textarea id="aiSrc" rows="6" placeholder="متن خام..."></textarea>
+  <div class="row">
+    <button id="aiGo" class="ai">✨ استخراج با هوشواره</button>
+    <button id="aiManual" class="sec">⚡ ساخت پیش‌نویس (روش دستی)</button>
+    <span id="aiStatus" class="hint"></span>
+  </div>
+  <datalist id="catNames"></datalist>
+  <div id="drafts"></div>
+  <div class="row" style="margin-top:10px">
+    <button id="aiSaveAll" class="primary" hidden>💾 ذخیره حافظه‌های انتخابی</button>
+    <div class="sp"></div>
+    <button id="aiClose">بستن</button>
+  </div>
+</dialog>
+
+<!-- دیالوگ خلاصه‌سازی -->
+<dialog id="sumDlg" class="wide">
+  <h3 id="sumDlgTitle">🤖 خلاصه‌سازی هوشواره</h3>
+  <input id="sumTitle">
+  <textarea id="sumContent" rows="10"></textarea>
+  <div class="row">
+    <button id="sumApply" class="primary">جایگزین در ویرایشگر</button>
+    <div class="sp"></div>
+    <button id="sumClose">انصراف</button>
+  </div>
+</dialog>
+
+<!-- دیالوگ تنظیمات کاملاً تب‌بندی شده لایب‌مموری -->
+<dialog id="settingsDlg" class="wide">
+  <h3 id="settingsDlgTitle">⚙️ تنظیمات و شخصی‌سازی لایب‌مموری (LibMemory)</h3>
+
+  <!-- نوار تب‌های تنظیمات -->
+  <nav class="settings-tabs">
+    <button type="button" class="stab-btn active" data-tab="stab-appearance" id="tabBtnAppearance">🎨 ظاهر و زبان</button>
+    <button type="button" class="stab-btn" data-tab="stab-ai" id="tabBtnAi">🤖 هوشواره (AI)</button>
+    <button type="button" class="stab-btn" data-tab="stab-detect" id="tabBtnDetect">🎯 تشخیص و قالب</button>
+    <button type="button" class="stab-btn" data-tab="stab-sites" id="tabBtnSites">🧠 دکمه شناور</button>
+    <button type="button" class="stab-btn" data-tab="stab-backup" id="tabBtnBackup">💾 بکاپ و فایل متنی</button>
+  </nav>
+
+  <!-- تب ۱: ظاهر، تم‌ها و زبان -->
+  <div class="stab-pane" id="stab-appearance">
+    <fieldset>
+      <legend id="langLegend">🌐 زبان رابط کاربری (Language)</legend>
+      <p class="hint" id="langSelectLbl" style="margin:2px 0 6px">زبان پنل مدیریت و ویجت چت را انتخاب کنید:</p>
+      <div class="lang-cards">
+        <div class="lang-card active" data-lang="fa" id="langCardFa">
+          <span style="font-size:18px">🇮🇷</span>
+          <span>فارسی (Persian)</span>
+        </div>
+        <div class="lang-card" data-lang="en" id="langCardEn">
+          <span style="font-size:18px">🇺🇸</span>
+          <span>English (US)</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend id="themeLegend">🎨 تم و ظاهر پنل (شخصی‌سازی و حالت شیشه‌ای)</legend>
+      <p class="hint" id="themeHint" style="margin:2px 0 6px">تم انتخاب‌شده فوراً روی پنل مدیریت و ویجت شناور داخل همه سایت‌های هوش مصنوعی اعمال می‌شود:</p>
+      <div id="themeGrid" class="theme-grid"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend id="fontLegend">🔤 فونت رابط کاربری (تایپوگرافی)</legend>
+      <p class="hint" id="fontHint" style="margin:2px 0 6px">
+        به‌طور پیش‌فرض از فونت استاندارد <b>وزیرمتن (Vazirmatn)</b> استفاده می‌شود. می‌توانید فونت دلخواه خود (TTF، WOFF، WOFF2، OTF) را آپلود کنید:
+      </p>
+      <div class="row" style="margin-top:8px;gap:8px;align-items:center">
+        <label class="btn primary" id="uploadFontLbl" style="cursor:pointer">
+          <span id="uploadFontBtnText">📤 آپلود فونت دلخواه</span>
+          <input type="file" id="customFontFileInput" accept=".ttf,.woff,.woff2,.otf" hidden>
+        </label>
+        <button type="button" id="resetFontBtn" class="sec">🔄 بازگردانی به وزیرمتن</button>
+        <span id="currentFontBadge" class="hint" style="font-weight:600;color:var(--text-main)">فونت فعال: وزیرمتن (پیش‌فرض)</span>
+      </div>
+      <div id="fontPreviewSample" style="margin-top:10px;padding:10px 14px;border-radius:8px;background:var(--bg-elevated);border:1px solid var(--border-col);font-size:13px">
+        پیش‌نمایش قلم: لایب‌مموری — پل هوشمند حافظه بلندمدت هوش مصنوعی (۱۲۳۴۵۶۷۸۹۰)
+      </div>
+    </fieldset>
+  </div>
+
+  <!-- تب ۲: سرویس هوش مصنوعی (AI) -->
+  <div class="stab-pane" id="stab-ai" hidden>
+    <fieldset><legend id="aiLegend">سرویس هوشواره (AI)</legend>
+      <label id="providerLbl">نوع سرویس هوش مصنوعی</label>
+      <select id="setProvider">
+        <option value="gemini" id="optProvGemini">Google Gemini (API رسمی جیمنای)</option>
+        <option value="claude" id="optProvClaude">Anthropic Claude (هوش مصنوعی کلاود)</option>
+        <option value="openai" id="optProvOpenai">سازگار با OpenAI (OpenAI, DeepSeek, Groq, OpenRouter, Ollama و ...)</option>
+      </select>
+
+      <div id="pGemini">
+        <label id="gKeyLbl">کلید API جیمنای (<a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary)">Google AI Studio</a>)</label>
+        <input id="gKey" type="password" placeholder="AIza..." autocomplete="off" dir="ltr">
+        <label class="modelLblText">نام مدل</label>
+        <input id="gModel" list="gModels" dir="ltr">
+        <datalist id="gModels">
+          <option value="gemini-2.5-flash">
+          <option value="gemini-2.5-flash-lite">
+          <option value="gemini-2.0-flash">
+        </datalist>
+      </div>
+
+      <div id="pClaude" hidden>
+        <label id="cKeyLbl">کلید API کلاود (<a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--primary)">Anthropic Console</a>)</label>
+        <input id="cKey" type="password" placeholder="sk-ant-..." autocomplete="off" dir="ltr">
+        <label class="modelLblText">نام مدل</label>
+        <input id="cModel" list="cModels" placeholder="claude-3-5-sonnet-latest" dir="ltr">
+        <datalist id="cModels">
+          <option value="claude-3-7-sonnet-latest">
+          <option value="claude-3-5-sonnet-latest">
+          <option value="claude-3-5-haiku-latest">
+        </datalist>
+      </div>
+
+      <div id="pOpenai" hidden>
+        <label id="baseUrlLbl">آدرس پایه API (Base URL)</label>
+        <input id="oBase" placeholder="https://api.openai.com/v1" dir="ltr">
+        <p class="hint">
+          OpenAI → <code>https://api.openai.com/v1</code> · DeepSeek → <code>https://api.deepseek.com/v1</code> · OpenRouter → <code>https://openrouter.ai/api/v1</code> · Ollama → <code>http://localhost:11434/v1</code>
+        </p>
+        <label id="apiKeyLbl">کلید API</label>
+        <input id="oKey" type="password" autocomplete="off" dir="ltr">
+        <label class="modelLblText">نام مدل</label>
+        <input id="oModel" placeholder="gpt-4o-mini" dir="ltr">
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <button id="testKey" type="button">🔌 تست اتصال به هوشواره</button>
+        <span id="testRes" class="hint"></span>
+      </div>
+      <label id="capLbl">سقف درخواست روزانه افزونه (۰ = بدون سقف)</label>
+      <input id="setCap" type="number" min="0" dir="ltr">
+      <div class="row"><span id="usageInfo" class="hint"></span><div class="sp"></div><button id="resetCd" type="button">رفع وضعیت محدودیت سهمیه</button></div>
+    </fieldset>
+  </div>
+
+  <!-- تب ۳: تشخیص خودکار و قالب پرامپت -->
+  <div class="stab-pane" id="stab-detect" hidden>
+    <fieldset><legend id="autoDetectLegend">پیدا کردن خودکار حافظه‌های مرتبط با پرامپت</legend>
+      <label id="autoDetectLbl">نحوه تشخیص پیش‌فرض حافظه‌ها هنگام تایپ پرامپت:</label>
+      <select id="setAutoSelectMode">
+        <option value="manual" id="optAutoOff">خاموش (انتخاب دستی توسط کاربر)</option>
+        <option value="cosine" id="optAutoManual">⚡ روش دستی (جستجوی هوشمند محلی، سریع و بدون نیاز به هوشواره)</option>
+        <option value="ai" id="optAutoAi">🤖 با هوشواره (تطبیق معنایی با Gemini / Claude / OpenAI)</option>
+      </select>
+      <p class="hint" id="autoDetectHint">
+        در <b>روش دستی</b>، موتور ترکیبی هوشمند بدون نیاز به اینترنت یا API، قوی‌ترین تطبیق را روی عنوان، دسته و متن حافظه‌ها انجام می‌دهد و بهترین گزینه‌ها را انتخاب می‌کند.
+      </p>
+    </fieldset>
+
+    <fieldset><legend id="tplLegend">قالب ارسال حافظه به چت</legend>
+      <label id="tplHeaderLbl">متن سربرگ قبل از حافظه‌ها</label>
+      <textarea id="setHeader" rows="2"></textarea>
+      <label id="tplSepLbl">جداکننده قبل از پرامپت شما</label>
+      <input id="setSep">
+      <button id="setReset" type="button" style="margin-top:6px">بازگردانی قالب پیش‌فرض</button>
+    </fieldset>
+  </div>
+
+  <!-- تب ۴: تنظیمات دکمه شناور -->
+  <div class="stab-pane" id="stab-sites" hidden>
+    <fieldset><legend id="fabLegend">دکمه شناور (🧠) در سایت‌های هوش مصنوعی</legend>
+      <div class="row"><label style="margin:0;display:flex;gap:6px;align-items:center"><input id="fabGlobal" type="checkbox" style="width:auto"> <span id="fabEnableLbl">فعال بودن دکمه شناور</span></label></div>
+      <div class="row">
+        <label style="margin:0" id="fabSideLbl">پیش‌فرض: سمت</label>
+        <select id="fabSide" style="width:auto">
+          <option value="left" id="optSideLeft">چپ</option>
+          <option value="right" id="optSideRight">راست</option>
+        </select>
+        <label style="margin:0" id="fabBottomLbl">فاصله از پایین (px)</label>
+        <input id="fabBottom" type="number" min="0" max="2000" style="width:90px" dir="ltr">
+      </div>
+      <label id="fabSiteOverrideLbl">تنظیم مکان و نمایش اختصاصی برای هر سایت:</label>
+      <table id="siteTbl">
+        <thead>
+          <tr>
+            <th id="thSite">سایت</th>
+            <th id="thShow">نمایش</th>
+            <th id="thSide">سمت</th>
+            <th id="thBottom">فاصله از پایین</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </fieldset>
+  </div>
+
+  <!-- تب ۵: خروجی/ورودی بکاپ JSON و فایل متنی (.txt) همراه با راهنما -->
+  <div class="stab-pane" id="stab-backup" hidden>
+    <!-- بخش خروجی متنی TXT -->
+    <fieldset>
+      <legend id="backupTxtLegend">📄 خروجی و ورودی طبقه‌بندی‌شده متنی (فایل Text / .txt)</legend>
+      <p class="hint" id="backupTxtHint">
+        تمام حافظه‌ها را به شکل دسته‌بندی‌شده و پاراگرافی در یک فایل متنی (.txt) خوانا ذخیره کنید، یا فایل متنی خودتان را با همان قالب وارد کنید تا حافظه‌ها و دسته‌ها خودکار ساخته شوند:
+      </p>
+      <div class="row" style="margin-top:8px;gap:8px">
+        <button type="button" id="exportTxtBtn" class="primary">📄 دانلود خروجی متنی طبقه‌بندی‌شده (.txt)</button>
+        <label class="btn" id="importTxtLbl">
+          <span id="importTxtBtnText">📥 افزودن حافظه‌ها از فایل متنی (.txt)</span>
+          <input type="file" id="importTxtFile" accept=".txt,text/plain" hidden>
+        </label>
+        <button type="button" id="pasteTxtToggleBtn" class="sec">✍️ درج مستقیم متن</button>
+      </div>
+
+      <!-- کادر درج مستقیم متن برای ایمپورت سریع بدون ساخت فایل -->
+      <div id="pasteTxtBox" style="margin-top:10px" hidden>
+        <textarea id="pasteTxtContent" rows="6" placeholder="متن طبقه‌بندی‌شده خود را اینجا بچسبانید..."></textarea>
+        <div class="row" style="margin-top:6px">
+          <button type="button" id="pasteTxtApplyBtn" class="primary">✅ پردازش و افزودن حافظه‌ها از متن</button>
+        </div>
+      </div>
+
+      <!-- راهنمای قالب فایل متنی -->
+      <div class="format-guide-box">
+        <b id="txtFormatGuideTitle" style="color:var(--text-main)">📌 راهنمای قالب استاندارد فایل متنی (.txt) برای ورود حافظه‌ها:</b>
+        <p id="txtFormatGuideDesc" style="margin:4px 0 6px;color:var(--text-muted)"></p>
+        <pre class="format-sample"><code>## 📁 برنامه‌نویسی
+
+### 📌 پایتون و ابزارها
+من در پروژه‌هایم از پایتون ۳.۱۲ و FastAPI استفاده می‌کنم. ترجیح می‌دهم همیشه کدهای تمیز با Type Hinting بنویسم.
+
+### کتابخانه‌های فرانت‌اند
+برای ساخت رابط‌های وب از React و TailwindCSS استفاده می‌کنم.
+
+------------------------------------------------------------
+
+## 📁 اطلاعات شخصی و شغلی
+
+### مشخصات کاری
+نام من علی است و به عنوان معمار ارشد نرم‌افزار فعالیت می‌کنم. زبان پیش‌فرض پاسخ‌ها را فارسی قرار بده.</code></pre>
+      </div>
+    </fieldset>
+
+    <!-- بخش بکاپ کامل JSON -->
+    <fieldset>
+      <legend id="backupJsonLegend">📦 پشتیبان‌گیری و بازیابی کامل (فرمت JSON)</legend>
+      <p class="hint" id="backupJsonHint">
+        شامل تمام حافظه‌ها، دسته‌بندی‌ها، متغیرهای پویا و تنظیمات شما در یک فایل استاندارد:
+      </p>
+      <div class="row" style="margin-top:8px;gap:8px">
+        <button type="button" id="exportJsonBtn">⬇️ دانلود بکاپ کامل (JSON)</button>
+        <label class="btn" id="importJsonLbl">
+          <span id="importJsonBtnText">⬆️ بازیابی از فایل بکاپ (JSON)</span>
+          <input type="file" id="importJsonFile" accept=".json,application/json" hidden>
+        </label>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <button id="setSave" class="primary">ذخیره تنظیمات</button>
+    <div class="sp"></div>
+    <button id="setClose">بستن</button>
+  </div>
+</dialog>
+
+<!-- دیالوگ راهنمای جامع و صفر تا صد لایب‌مموری -->
+<dialog id="tutDlg" class="wide tut">
+  <h3 id="tutTitle">📖 راهنمای جامع و قدم‌به‌قدم لایب‌مموری (LibMemory)</h3>
+  <div class="tut-content" id="tutContent"></div>
+  <div class="row" style="margin-top:16px">
+    <div class="sp"></div>
+    <button id="tutClose" class="primary">متوجه شدم، شروع استفاده</button>
+  </div>
+</dialog>
+
+<div id="toast"></div>
+<script src="common.js"></script>
+<script src="manager.js"></script>
+</body>
+</html>

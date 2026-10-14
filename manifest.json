@@ -1,0 +1,89 @@
+{
+  "manifest_version": 3,
+  "name": "LibMemory | لایب‌مموری",
+  "version": "8.1.0",
+  "description": "حافظه بلندمدت هوشمند و دوزبانه (لایب‌مموری / LibMemory) با تم‌های شیشه‌ای، روش دستی، متغیرهای پویا، اسلش‌کامند، تایپوگرافی سفارشی، بکاپ متنی و دستیار هوشواره",
+  "permissions": [
+    "storage",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.openai.com/*",
+    "https://api.deepseek.com/*",
+    "https://openrouter.ai/*",
+    "https://api.groq.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "fonts/Vazirmatn[wght].ttf"
+      ],
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://chat.deepseek.com/*",
+        "https://gemini.google.com/*",
+        "https://chat.qwen.ai/*",
+        "https://chat.qwenlm.ai/*",
+        "https://grok.com/*",
+        "https://x.com/*",
+        "https://www.perplexity.ai/*",
+        "https://perplexity.ai/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "لایب‌مموری | LibMemory",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png",
+    "256": "icons/icon256.png",
+    "512": "icons/icon512.png"
+  },
+  "commands": {
+    "toggle-panel": {
+      "suggested_key": {
+        "default": "Alt+M"
+      },
+      "description": "باز/بسته کردن پنل لایب‌مموری | Toggle LibMemory Panel"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://chat.deepseek.com/*",
+        "https://gemini.google.com/*",
+        "https://chat.qwen.ai/*",
+        "https://chat.qwenlm.ai/*",
+        "https://grok.com/*",
+        "https://x.com/i/grok*",
+        "https://www.perplexity.ai/*",
+        "https://perplexity.ai/*"
+      ],
+      "js": [
+        "common.js",
+        "content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}
