@@ -1,0 +1,35 @@
+name: Build and Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Package extension as ZIP
+        run: |
+          zip -r extension.zip . -x "*.git*" "*.github*" "*.pem"
+
+      - name: Sign CRX and generate updates.xml
+        uses: cardinalby/webext-buildtools-chrome-crx-action@v2
+        with:
+          zipFilePath: 'extension.zip'
+          crxFilePath: 'extension.crx'
+          privateKey: ${{ secrets.CHROME_CRX_PRIVATE_KEY }}
+          updateXmlPath: 'updates.xml'
+          updateXmlCodebaseUrl: 'https://github.com/alipynet/LibMemory-Ex/releases/latest/download/extension.crx'
+          updateXmlAppId: 'mlpoicfcfjemlecodobjnmmgmkgnemgm'
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            extension.crx
+            updates.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
