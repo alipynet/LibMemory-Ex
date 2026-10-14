@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-8.1.0-indigo.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.0.0-indigo.svg" alt="Version">
   <img src="https://img.shields.io/badge/manifest-v3-blue.svg" alt="Manifest V3">
   <img src="https://img.shields.io/badge/theme-Glassmorphism-purple.svg" alt="Theme">
   <img src="https://img.shields.io/badge/offline-BM25%20%2B%20Cosine-success.svg" alt="Offline Engine">
@@ -85,7 +85,7 @@ This project is released under the [MIT License](LICENSE).
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-8.1.0-indigo.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.0.0-indigo.svg" alt="Version">
   <img src="https://img.shields.io/badge/manifest-v3-blue.svg" alt="Manifest V3">
   <img src="https://img.shields.io/badge/theme-Glassmorphism-purple.svg" alt="Theme">
   <img src="https://img.shields.io/badge/offline-BM25%20%2B%20Cosine-success.svg" alt="Offline Engine">
